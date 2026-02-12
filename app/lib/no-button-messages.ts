@@ -1,0 +1,16 @@
+export const noButtonMessages = [
+  "No",
+  "¿Estas segura?",
+  "Segura??",
+  "Piensalo Bien!",
+  "Porfa?? 🥺",
+  "Naguara, ya nomas di que si...",
+  "Ya me arreche 😢",
+  "Picale al que si es!",
+  "Este no el otro!",
+  "Me quiebras el corazon 💔",
+  "YA DI QUE SI!",
+  "Este boton no sirve JAJAJ ;)",
+  "Buena esa 😏",
+  "Tu sabes que si quieres...",
+];

@@ -1,26 +1,177 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Original valentine palette */
+  --valentine-pink: #FF6B9D;
+  --valentine-rose: #C84B7A;
+  --valentine-blush: #FFF0F5;
+  --valentine-peach: #FFDAB9;
+  --valentine-red: #E63946;
+  --valentine-gold: #FFD700;
+  --valentine-cream: #FFF8F0;
+  --valentine-purple: #9B5DE5;
+  --valentine-text: #2D1B33;
+
+  /* Mexican pink */
+  --mexican-pink: #E4007C;
+
+  /* Venezuelan flag */
+  --venezuela-yellow: #FFCC00;
+  --venezuela-blue: #00247D;
+  --venezuela-red: #CF142B;
+
+  /* Dark cinematic palette */
+  --deep-burgundy: #4A0E2E;
+  --midnight-rose: #2D0A1F;
+  --warm-black: #1A0A10;
+  --soft-gold: #D4AF37;
+  --orchid-purple: #B55FBA;
+  --orchid-pink: #DA70D6;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-valentine-pink: var(--valentine-pink);
+  --color-valentine-rose: var(--valentine-rose);
+  --color-valentine-blush: var(--valentine-blush);
+  --color-valentine-peach: var(--valentine-peach);
+  --color-valentine-red: var(--valentine-red);
+  --color-valentine-gold: var(--valentine-gold);
+  --color-valentine-cream: var(--valentine-cream);
+  --color-valentine-purple: var(--valentine-purple);
+  --color-valentine-text: var(--valentine-text);
+
+  --color-mexican-pink: var(--mexican-pink);
+
+  --color-venezuela-yellow: var(--venezuela-yellow);
+  --color-venezuela-blue: var(--venezuela-blue);
+  --color-venezuela-red: var(--venezuela-red);
+
+  --color-deep-burgundy: var(--deep-burgundy);
+  --color-midnight-rose: var(--midnight-rose);
+  --color-warm-black: var(--warm-black);
+  --color-soft-gold: var(--soft-gold);
+  --color-orchid-purple: var(--orchid-purple);
+  --color-orchid-pink: var(--orchid-pink);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-playfair);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--warm-black);
+  color: #F5E6F0;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Pulse animation for heart */
+@keyframes pulse-heart {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* Float up animation for background hearts */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--float-opacity, 0.7);
+  }
+  90% {
+    opacity: var(--float-opacity, 0.7);
+  }
+  100% {
+    transform: translateY(-100vh) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+/* Shimmer effect for adventure text */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Glow pulse for countdown text */
+@keyframes glow-pulse {
+  0%, 100% {
+    text-shadow:
+      0 0 20px rgba(228, 0, 124, 0.5),
+      0 0 40px rgba(228, 0, 124, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 0 40px rgba(228, 0, 124, 0.8),
+      0 0 80px rgba(228, 0, 124, 0.4),
+      0 0 120px rgba(228, 0, 124, 0.2);
+  }
+}
+
+/* Slow breathing for background elements */
+@keyframes breathe {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* Reveal slide-up for text */
+@keyframes reveal-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Gold border glow */
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(212, 175, 55, 0.3); }
+  50% { border-color: rgba(212, 175, 55, 0.7); }
+}
+
+.animate-pulse-heart {
+  animation: pulse-heart 1.5s ease-in-out infinite;
+}
+
+.animate-float-up {
+  animation: float-up var(--duration, 8s) linear forwards;
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+/* Gradient text utility */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #D4AF37, #FFD700, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-pink {
+  background: linear-gradient(135deg, #E4007C, #FF6B9D, #C84B7A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(45, 10, 31, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
