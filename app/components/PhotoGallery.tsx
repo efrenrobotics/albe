@@ -12,10 +12,10 @@ interface Photo {
 const PHOTOS: Photo[] = [
   { src: "/photos/brazo.jpg", caption: "Nuestra primera aventura" },
   {
-    src: "/photos/cangrejo.JPG",
+    src: "/photos/cangrejo.jpg",
     caption: "Esa vez que nos reimos demasiado",
   },
-  { src: "/photos/rooftop.jpg", caption: "Mi vista favorita (eres tu)" },
+  { src: "/photos/rooftop.JPG", caption: "Mi vista favorita (eres tu)" },
   { src: "/photos/botas.JPG", caption: "Buenos recuerdos" },
   { src: "/photos/navidad.jpg", caption: "Twins" },
   { src: "/photos/vaqueros.JPG", caption: "Mas por venir... 💕" },
@@ -51,7 +51,7 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
         boxShadow: "0 8px 30px rgba(212, 175, 55, 0.15)",
       }}
     >
-      <div className="aspect-square overflow-hidden">
+      <div className="aspect-square lg:aspect-auto lg:h-full overflow-hidden">
         <img
           src={photo.src}
           alt={photo.caption}
@@ -77,7 +77,7 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
 export default function PhotoGallery() {
   return (
     <motion.section
-      className="flex flex-col items-center min-h-[100dvh] px-6 py-20 relative z-10 overflow-hidden"
+      className="flex flex-col items-center min-h-[100dvh] lg:h-[100dvh] px-6 py-20 lg:py-6 relative z-10 overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -102,7 +102,7 @@ export default function PhotoGallery() {
       </motion.div>
 
       <motion.h2
-        className="font-serif text-4xl md:text-5xl font-bold text-gradient-gold mb-10 text-center"
+        className="font-serif text-4xl md:text-5xl lg:text-4xl font-bold text-gradient-gold mb-10 lg:mb-4 text-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -110,14 +110,14 @@ export default function PhotoGallery() {
         Algunos de mis momentos favoritos contigo
       </motion.h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6 max-w-3xl w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6 lg:gap-4 max-w-3xl w-full lg:flex-1 lg:min-h-0 lg:grid-rows-2">
         {PHOTOS.map((photo, i) => (
           <PhotoCard key={i} photo={photo} index={i} />
         ))}
       </div>
 
       <motion.p
-        className="text-2xl font-serif text-gradient-gold mt-16 text-center italic"
+        className="text-2xl font-serif text-gradient-gold mt-16 lg:mt-4 text-center italic"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
