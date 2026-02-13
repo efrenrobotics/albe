@@ -16,7 +16,7 @@ interface TimeRemaining {
   total: number;
 }
 
-const TARGET_DATE = new Date("2026-02-13T12:00:00-06:00"); // Noon CST
+const TARGET_DATE = new Date("2026-02-13T13:00:00-06:00"); // 1 PM CST
 
 function calcTimeRemaining(): TimeRemaining {
   const now = Date.now();
