@@ -24,7 +24,7 @@ export default function BirthdayPage() {
 
   return (
     <main className="min-h-[100dvh] bg-warm-black relative">
-      {phase !== "countdown" && <MusicPlayer src="/audio/se-vienen-cositas.mp3" />}
+      {phase !== "countdown" && <MusicPlayer src="/audio/las-mananitas.mp3" />}
       {phase !== "countdown" && <BirthdayParticles />}
 
       <AnimatePresence mode="wait">

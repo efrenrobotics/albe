@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import TypewriterText from "./TypewriterText";
 
-const PLACEHOLDER_VIDEO_ID = "PLACEHOLDER_VIDEO_ID";
+const PLACEHOLDER_VIDEO_ID = "h87QN4DaUKU";
 
 export default function VideoFinale() {
   return (
