@@ -187,6 +187,77 @@ body {
   background-clip: text;
 }
 
+/* Birthday gold gradient text */
+.text-gradient-birthday {
+  background: linear-gradient(135deg, #FFD700, #FFF1A8, #FFD700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Spotlight pulse for concert reveal */
+@keyframes spotlight-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 60px rgba(255, 215, 0, 0.2),
+      inset 0 0 60px rgba(255, 215, 0, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 0 120px rgba(255, 215, 0, 0.4),
+      0 0 200px rgba(255, 215, 0, 0.15),
+      inset 0 0 80px rgba(255, 215, 0, 0.1);
+  }
+}
+
+.animate-spotlight-pulse {
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+/* Gift shake wiggle for gift emoji */
+@keyframes gift-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15% { transform: rotate(-12deg) scale(1.05); }
+  30% { transform: rotate(10deg) scale(1.1); }
+  45% { transform: rotate(-8deg) scale(1.05); }
+  60% { transform: rotate(6deg) scale(1.08); }
+  75% { transform: rotate(-4deg) scale(1.03); }
+}
+
+.animate-gift-shake {
+  animation: gift-shake 1.8s ease-in-out infinite;
+}
+
+/* Reveal pop entrance for revealed content */
+@keyframes reveal-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-reveal-pop {
+  animation: reveal-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Flower glow pulse for flowers card */
+@keyframes flower-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 30px rgba(218, 112, 214, 0.2),
+      inset 0 0 30px rgba(218, 112, 214, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 0 60px rgba(218, 112, 214, 0.4),
+      0 0 100px rgba(218, 112, 214, 0.15),
+      inset 0 0 40px rgba(218, 112, 214, 0.1);
+  }
+}
+
+.animate-flower-glow {
+  animation: flower-glow 2s ease-in-out infinite;
+}
+
 /* Glassmorphism card */
 .glass-card {
   background: rgba(45, 10, 31, 0.6);

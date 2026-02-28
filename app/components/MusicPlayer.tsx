@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 
-export default function MusicPlayer() {
+export default function MusicPlayer({ src = "/audio/se-vienen-cositas.mp3" }: { src?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted] = useState(false);
   const [started, setStarted] = useState(false);
@@ -44,7 +44,7 @@ export default function MusicPlayer() {
     <>
       <audio
         ref={audioRef}
-        src="/audio/se-vienen-cositas.mp3"
+        src={src}
         loop
         preload="auto"
       />
