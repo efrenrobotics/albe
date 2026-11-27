@@ -52,9 +52,16 @@ export default function IslandHub() {
             />
           </div>
 
-          {/* Locked islands — bottom row */}
+          {/* Anniversary + remaining locks */}
           <div className="flex flex-wrap justify-center gap-8 sm:gap-12 md:gap-16">
-            <LockedIsland label="???" delay={1.0} />
+            <Island
+              href="/aniversario"
+              label="Aniversario"
+              icon={<span>∞</span>}
+              glowColor="rgba(212,175,55,0.55)"
+              blobColor="#3D1F2E"
+              delay={1.0}
+            />
             <LockedIsland label="???" delay={1.2} />
             <LockedIsland label="Próximamente..." delay={1.4} />
           </div>
