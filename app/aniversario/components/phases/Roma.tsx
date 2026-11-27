@@ -5,32 +5,32 @@ import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import RomaSkyline from "../svg/RomaSkyline";
 import { CITIES } from "../../data/trip";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import styles from "../../journey.module.css";
 
-export default function Roma({ onContinue }: { onContinue: () => void }) {
+export default function Roma({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [tossed, setTossed] = useState(false);
   const [wish, setWish] = useState(false);
   const reduced = useReducedMotion();
   const city = CITIES.roma;
 
   useEffect(() => {
-    aniversarioAudio.play("bells");
-    void aniversarioAudio.playAmbient(city.ambient);
+    audio.play("bells");
+    void audio.playAmbient(city.ambient);
     return () => {
-      aniversarioAudio.stopLoops();
-      aniversarioAudio.stopAmbient();
+      audio.stopLoops();
+      audio.stopAmbient();
     };
-  }, [city.ambient]);
+  }, [audio, city.ambient]);
 
   useEffect(() => {
     if (!tossed) return;
     const impact = window.setTimeout(() => {
-      aniversarioAudio.play("splash");
+      audio.play("splash");
       setWish(true);
     }, reduced ? 80 : 530);
     return () => clearTimeout(impact);
-  }, [reduced, tossed]);
+  }, [audio, reduced, tossed]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={wish} hint="Seguir en tren">

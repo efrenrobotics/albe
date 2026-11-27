@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { aniversarioAudio } from "../lib/audio";
+import type { AniversarioAudio } from "../lib/audio";
 
-export default function MuteToggle() {
-  const [muted, setMuted] = useState(() => aniversarioAudio.isMuted());
+export default function MuteToggle({ audio }: { audio: AniversarioAudio }) {
+  const [muted, setMuted] = useState(() => audio.isMuted());
 
   const toggle = useCallback(() => {
     const next = !muted;
     setMuted(next);
-    aniversarioAudio.setMuted(next);
-  }, [muted]);
+    audio.setMuted(next);
+  }, [audio, muted]);
 
   return (
     <button

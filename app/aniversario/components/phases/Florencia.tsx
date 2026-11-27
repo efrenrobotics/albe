@@ -5,22 +5,22 @@ import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import FirenzeSkyline from "../svg/FirenzeSkyline";
 import { CITIES } from "../../data/trip";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import styles from "../../journey.module.css";
 
-export default function Florencia({ onContinue }: { onContinue: () => void }) {
+export default function Florencia({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [sunset, setSunset] = useState(0);
   const [done, setDone] = useState(false);
   const reduced = useReducedMotion();
   const city = CITIES.florencia;
 
   useEffect(() => {
-    void aniversarioAudio.playAmbient(city.ambient);
+    void audio.playAmbient(city.ambient);
     return () => {
-      aniversarioAudio.stopAmbient();
-      aniversarioAudio.setSunset(0);
+      audio.stopAmbient();
+      audio.setSunset(0);
     };
-  }, [city.ambient]);
+  }, [audio, city.ambient]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={done} hint="Volar a Viena">
@@ -49,7 +49,7 @@ export default function Florencia({ onContinue }: { onContinue: () => void }) {
             onChange={(event) => {
               const next = Number(event.currentTarget.value) / 100;
               setSunset(next);
-              aniversarioAudio.setSunset(next);
+              audio.setSunset(next);
               if (next >= 0.92) setDone(true);
             }}
             className="w-full min-h-11 accent-wien-light cursor-pointer"

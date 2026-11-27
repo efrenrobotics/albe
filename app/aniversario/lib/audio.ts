@@ -15,7 +15,7 @@ type SfxKind =
   | "chime"
   | "musicbox";
 
-class AniversarioAudio {
+export class AniversarioAudio {
   private ctx: AudioContext | null = null;
   private musicGain: GainNode | null = null;
   private sfxGain: GainNode | null = null;
@@ -488,5 +488,3 @@ class AniversarioAudio {
     this.muted = false;
   }
 }
-
-export const aniversarioAudio = new AniversarioAudio();

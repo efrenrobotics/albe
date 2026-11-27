@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import { CITIES, HOOK_LINE, LEGS, TRIP } from "../../data/trip";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import styles from "../../journey.module.css";
 
 const DESTINATION = CITIES.roma.name.toLocaleUpperCase("es").split("");
 const LYRIC = `«${HOOK_LINE}»`;
 
-export default function Aeropuerto({ onContinue }: { onContinue: () => void }) {
+export default function Aeropuerto({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [flaps, setFlaps] = useState(0);
   const [typed, setTyped] = useState(0);
   const [canAdvance, setCanAdvance] = useState(false);
@@ -22,7 +22,7 @@ export default function Aeropuerto({ onContinue }: { onContinue: () => void }) {
     const timers = DESTINATION.map((_, index) =>
       window.setTimeout(() => {
         setFlaps(index + 1);
-        if (!reduced || index === 0) aniversarioAudio.play("flap");
+        if (!reduced || index === 0) audio.play("flap");
       }, reduced ? 350 : 1500 + index * 210),
     );
     let interval: number | undefined;
@@ -43,7 +43,7 @@ export default function Aeropuerto({ onContinue }: { onContinue: () => void }) {
       clearTimeout(timer);
       clearInterval(interval);
     };
-  }, [reduced]);
+  }, [audio, reduced]);
 
   useEffect(() => {
     if (!complete) return;

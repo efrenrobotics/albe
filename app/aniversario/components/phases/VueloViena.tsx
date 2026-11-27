@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import RouteArc from "../RouteArc";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import { LEGS } from "../../data/trip";
 import styles from "../../journey.module.css";
 
@@ -15,16 +15,16 @@ const CLOUDS = [
   { y: "82%", x: "50%", width: "72vw", speed: 14 },
 ];
 
-export default function VueloViena({ onContinue }: { onContinue: () => void }) {
+export default function VueloViena({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [canAdvance, setCanAdvance] = useState(false);
   const reduced = useReducedMotion();
   const leg = LEGS[2];
 
   useEffect(() => {
-    aniversarioAudio.play("whoosh");
+    audio.play("whoosh");
     const timer = window.setTimeout(() => setCanAdvance(true), reduced ? 850 : 2800);
     return () => clearTimeout(timer);
-  }, [reduced]);
+  }, [audio, reduced]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={canAdvance} hint="Aterrizar en Wien">

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import RouteArc from "../RouteArc";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import { LEGS } from "../../data/trip";
 import styles from "../../journey.module.css";
 
@@ -31,19 +31,19 @@ function TuscanLayer({ foreground }: { foreground: boolean }) {
   );
 }
 
-export default function Tren({ onContinue }: { onContinue: () => void }) {
+export default function Tren({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [canAdvance, setCanAdvance] = useState(false);
   const reduced = useReducedMotion();
   const leg = LEGS[1];
 
   useEffect(() => {
-    aniversarioAudio.play("train");
+    audio.play("train");
     const timer = window.setTimeout(() => setCanAdvance(true), reduced ? 850 : 3450);
     return () => {
       clearTimeout(timer);
-      aniversarioAudio.stopLoops();
+      audio.stopLoops();
     };
-  }, [reduced]);
+  }, [audio, reduced]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={canAdvance} hint="Llegar a Firenze">

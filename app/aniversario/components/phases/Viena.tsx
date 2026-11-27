@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import WienMarket from "../svg/WienMarket";
 import { CITIES } from "../../data/trip";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import { makeParticles } from "../../lib/seeded";
 import styles from "../../journey.module.css";
 
@@ -13,18 +13,18 @@ const STALLS = 5;
 const FLAKES = makeParticles(34, 88);
 const city = CITIES.viena;
 
-export default function Viena({ onContinue }: { onContinue: () => void }) {
+export default function Viena({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
   const [lit, setLit] = useState(0);
   const done = lit === STALLS;
 
   useEffect(() => {
-    aniversarioAudio.play("musicbox");
-    void aniversarioAudio.playAmbient(city.ambient);
+    audio.play("musicbox");
+    void audio.playAmbient(city.ambient);
     return () => {
-      aniversarioAudio.stopLoops();
-      aniversarioAudio.stopAmbient();
+      audio.stopLoops();
+      audio.stopAmbient();
     };
-  }, []);
+  }, [audio]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={done} hint="Ver nuestros recuerdos">
@@ -46,7 +46,7 @@ export default function Viena({ onContinue }: { onContinue: () => void }) {
           onClick={() => {
             if (done) return;
             setLit((value) => Math.min(STALLS, value + 1));
-            aniversarioAudio.play("chime");
+            audio.play("chime");
           }}
           className="relative mt-2 block w-full min-h-11 rounded-xl cursor-pointer"
           aria-label={done ? "Mercado iluminado" : `Encender luces del mercado, ${lit} de ${STALLS}`}

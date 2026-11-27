@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { AnimatePresence, MotionConfig, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { PHASE_ORDER, UNLOCK_DATE, type Phase } from "./data/trip";
-import { aniversarioAudio } from "./lib/audio";
+import { AniversarioAudio } from "./lib/audio";
 import MuteToggle from "./components/MuteToggle";
 import Countdown from "./components/phases/Countdown";
 import Abrir from "./components/phases/Abrir";
@@ -47,6 +47,7 @@ function AniversarioInner({ availableAudio }: { availableAudio: string[] }) {
   const [phase, setPhase] = useState<Phase>(
     () => bypass && isPhase(preview) ? preview : "countdown",
   );
+  const [audio] = useState(() => new AniversarioAudio());
   const [opened, setOpened] = useState(false);
   const [completedFlight, setCompletedFlight] = useState(false);
   const reduced = useReducedMotion() ?? false;
@@ -61,21 +62,28 @@ function AniversarioInner({ availableAudio }: { availableAudio: string[] }) {
     return () => clearInterval(timer);
   }, [bypass, phase]);
 
-  useEffect(() => () => aniversarioAudio.dispose(), []);
+  const disposal = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    window.clearTimeout(disposal.current);
+    // Suspense hydration and Strict Mode can reconnect effects on the same journey.
+    return () => {
+      disposal.current = window.setTimeout(() => audio.dispose(), 0);
+    };
+  }, [audio]);
 
   const advance = () => {
     setPhase(PHASE_ORDER[PHASE_ORDER.indexOf(phase) + 1] ?? phase);
   };
 
   const open = () => {
-    aniversarioAudio.unlock(availableAudio);
-    aniversarioAudio.startMusic();
+    audio.unlock(availableAudio);
+    audio.startMusic();
     setOpened(true);
     advance();
   };
 
   const replay = () => {
-    aniversarioAudio.reset();
+    audio.reset();
     setOpened(false);
     setCompletedFlight(false);
     setPhase("abrir");
@@ -88,20 +96,20 @@ function AniversarioInner({ availableAudio }: { availableAudio: string[] }) {
     <main className={styles.journey} data-theme={THEMES[phase]}>
       <div className={styles.atmosphere} aria-hidden />
       <GlobeBackdrop scene={scene} reduced={reduced} onFlightComplete={finishFlight} />
-      {opened && <MuteToggle />}
+      {opened && <MuteToggle audio={audio} />}
 
       <AnimatePresence mode="wait">
         {phase === "countdown" && <Countdown key={phase} />}
         {phase === "abrir" && <Abrir key={phase} onContinue={open} />}
-        {phase === "aeropuerto" && <Aeropuerto key={phase} onContinue={advance} />}
-        {phase === "despegue" && <Despegue key={phase} done={completedFlight} onContinue={advance} />}
-        {phase === "roma" && <Roma key={phase} onContinue={advance} />}
-        {phase === "tren" && <Tren key={phase} onContinue={advance} />}
-        {phase === "florencia" && <Florencia key={phase} onContinue={advance} />}
-        {phase === "vuelo-viena" && <VueloViena key={phase} onContinue={advance} />}
-        {phase === "viena" && <Viena key={phase} onContinue={advance} />}
+        {phase === "aeropuerto" && <Aeropuerto key={phase} audio={audio} onContinue={advance} />}
+        {phase === "despegue" && <Despegue key={phase} audio={audio} done={completedFlight} onContinue={advance} />}
+        {phase === "roma" && <Roma key={phase} audio={audio} onContinue={advance} />}
+        {phase === "tren" && <Tren key={phase} audio={audio} onContinue={advance} />}
+        {phase === "florencia" && <Florencia key={phase} audio={audio} onContinue={advance} />}
+        {phase === "vuelo-viena" && <VueloViena key={phase} audio={audio} onContinue={advance} />}
+        {phase === "viena" && <Viena key={phase} audio={audio} onContinue={advance} />}
         {phase === "recuerdos" && <Recuerdos key={phase} onContinue={advance} />}
-        {phase === "final" && <Final key={phase} onReplay={replay} />}
+        {phase === "final" && <Final key={phase} audio={audio} onReplay={replay} />}
       </AnimatePresence>
     </main>
   );

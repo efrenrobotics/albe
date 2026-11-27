@@ -2,17 +2,17 @@
 
 import { useEffect } from "react";
 import PhaseShell from "../PhaseShell";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import { LEGS } from "../../data/trip";
 import styles from "../../journey.module.css";
 
-export default function Despegue({ done, onContinue }: { done: boolean; onContinue: () => void }) {
+export default function Despegue({ audio, done, onContinue }: { audio: AniversarioAudio; done: boolean; onContinue: () => void }) {
   const leg = LEGS[0];
 
   useEffect(() => {
-    aniversarioAudio.play("engine");
-    aniversarioAudio.play("whoosh");
-  }, []);
+    audio.play("engine");
+    audio.play("whoosh");
+  }, [audio]);
 
   return (
     <PhaseShell onAdvance={onContinue} canAdvance={done} hint="Aterrizar en Roma" className="!justify-end">

@@ -4,22 +4,22 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import ConfettiExplosion from "react-confetti-explosion";
 import PhaseShell from "../PhaseShell";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
 import { CITIES, TRIP } from "../../data/trip";
 import styles from "../../journey.module.css";
 
 const COLORS = ["#D4AF37", "#E8B84A", "#C45C26", "#E8A0A0", "#FFE6A0"];
 
-export default function Final({ onReplay }: { onReplay: () => void }) {
+export default function Final({ audio, onReplay }: { audio: AniversarioAudio; onReplay: () => void }) {
   const [burst, setBurst] = useState(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    aniversarioAudio.swell();
+    audio.swell();
     if (reduced) return;
     const timer = window.setTimeout(() => setBurst(true), 3900);
     return () => clearTimeout(timer);
-  }, [reduced]);
+  }, [audio, reduced]);
 
   return (
     <PhaseShell className="!justify-end">
