@@ -57,9 +57,9 @@ export default function IslandHub() {
             <Island
               href="/aniversario"
               label="Aniversario"
-              icon={<span>∞</span>}
-              glowColor="rgba(212,175,55,0.55)"
-              blobColor="#3D1F2E"
+              icon={<span aria-hidden>∞</span>}
+              glowColor="rgba(247,167,117,0.55)"
+              blobColor="#704052"
               delay={1.0}
             />
             <LockedIsland label="???" delay={1.2} />

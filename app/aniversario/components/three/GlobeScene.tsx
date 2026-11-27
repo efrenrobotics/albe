@@ -1,276 +1,272 @@
 "use client";
 
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import { CITIES, LEGS, type City } from "../../data/trip";
+import {
+  BufferAttribute, CatmullRomCurve3, Group, DoubleSide,
+  AdditiveBlending, BackSide, Mesh, Shape, TubeGeometry, Vector3,
+} from "three";
+import { CITIES, LEGS, type Leg } from "../../data/trip";
 import { greatCirclePoints, latLngToVec3 } from "../../lib/geo";
-import { useReducedMotion } from "../../hooks/useReducedMotion";
+import { isLand } from "../../lib/land";
+import type { GlobeSceneName } from "../GlobeBackdrop";
 
-const R = 1.6;
+const RADIUS = 1.6;
+const SEGMENTS = 96;
+const RADIAL_SEGMENTS = 5;
+const GOLD = "#ffcd7a";
+const WORLD_UP = new Vector3(0, 1, 0);
 
-function GridSphere() {
-  const points = useMemo(() => {
-    const pts: number[] = [];
-    for (let lat = -75; lat <= 75; lat += 15) {
-      for (let lng = 0; lng < 360; lng += 4) {
-        const [x, y, z] = latLngToVec3(lat, lng - 180, R);
-        pts.push(x, y, z);
-      }
+const AURA_VERTEX = `
+  varying vec3 vNormal;
+  varying vec3 vView;
+  void main() {
+    vec4 view = modelViewMatrix * vec4(position, 1.);
+    vView = normalize(-view.xyz);
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * view;
+  }
+`;
+const AURA_FRAGMENT = `
+  varying vec3 vNormal;
+  varying vec3 vView;
+  void main() {
+    float rim = pow(1. - abs(dot(normalize(vNormal), normalize(vView))), 3.);
+    gl_FragColor = vec4(vec3(.47, .22, .39), rim * .55);
+  }
+`;
+
+function landPoints() {
+  const points: number[] = [];
+  for (let lat = -57; lat <= 82; lat += 1.9) {
+    const interval = 1.9 / Math.cos(lat * Math.PI / 180);
+    for (let lng = -177; lng < 177; lng += interval) {
+      if (isLand(lng, lat)) points.push(...latLngToVec3(lat, lng, RADIUS + 0.005));
     }
-    for (let lng = -180; lng < 180; lng += 20) {
-      for (let lat = -80; lat <= 80; lat += 3) {
-        const [x, y, z] = latLngToVec3(lat, lng, R);
-        pts.push(x, y, z);
-      }
+  }
+  return new Float32Array(points);
+}
+
+function routeCurve({ from, to }: Leg, lift: number) {
+  const a = CITIES[from];
+  const b = CITIES[to];
+  return new CatmullRomCurve3(
+    greatCirclePoints(a.lat, a.lng, b.lat, b.lng, 1, SEGMENTS).map(
+      (point, index) => new Vector3(...point)
+        .multiplyScalar(RADIUS + 0.025 + lift * Math.sin(Math.PI * index / SEGMENTS)),
+    ),
+  );
+}
+
+function gridPoints() {
+  const points: number[] = [];
+  for (let lat = -75; lat <= 75; lat += 15) {
+    for (let lng = -180; lng < 180; lng += 4) {
+      points.push(...latLngToVec3(lat, lng, RADIUS));
     }
-    return new Float32Array(pts);
+  }
+  for (let lng = -180; lng < 180; lng += 20) {
+    for (let lat = -80; lat <= 80; lat += 3) {
+      points.push(...latLngToVec3(lat, lng, RADIUS));
+    }
+  }
+  return new Float32Array(points);
+}
+
+function planeShape() {
+  const shape = new Shape();
+  shape.moveTo(0, 0.82);
+  shape.lineTo(0.13, 0.27);
+  shape.lineTo(0.66, -0.17);
+  shape.lineTo(0.66, -0.32);
+  shape.lineTo(0.13, -0.17);
+  shape.lineTo(0.09, -0.53);
+  shape.lineTo(0.31, -0.69);
+  shape.lineTo(0.31, -0.8);
+  shape.lineTo(0, -0.70);
+  shape.lineTo(-0.31, -0.8);
+  shape.lineTo(-0.31, -0.69);
+  shape.lineTo(-0.09, -0.53);
+  shape.lineTo(-0.13, -0.17);
+  shape.lineTo(-0.66, -0.32);
+  shape.lineTo(-0.66, -0.17);
+  shape.lineTo(-0.13, 0.27);
+  shape.closePath();
+  return shape;
+}
+
+function FinaleRoute({ progress, cameraAxis }: {
+  progress: React.RefObject<number>;
+  cameraAxis: Vector3;
+}) {
+  const loop = useMemo(() => {
+    const points = LEGS.flatMap((leg, index) => {
+      const path = routeCurve(leg, index === 0 ? 0.18 : index === 3 ? 0.32 : 0.055);
+      return path.getPoints(SEGMENTS).slice(0, -1);
+    });
+    points.push(points[0].clone());
+    const right = new Vector3().crossVectors(WORLD_UP, cameraAxis).normalize();
+    const up = new Vector3().crossVectors(cameraAxis, right).normalize();
+    const front = cameraAxis.clone().multiplyScalar(RADIUS + 0.14);
+    const end = points.map((_, index) => {
+      const t = 2 * Math.PI * index / (points.length - 1);
+      return front.clone()
+        .addScaledVector(right, 0.99 * Math.cos(t))
+        .addScaledVector(up, 0.37 * Math.sin(2 * t));
+    });
+    const indices = new Uint16Array((points.length - 1) * 6);
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = i * 2;
+      indices.set([a, a + 2, a + 1, a + 1, a + 2, a + 3], i * 6);
+    }
+    return { points, end, indices, vertices: new Float32Array(points.length * 6) };
+  }, [cameraAxis]);
+  const line = useRef<Mesh>(null);
+  const { point, prior, next, side } = useMemo(() => ({
+    point: new Vector3(), prior: new Vector3(), next: new Vector3(), side: new Vector3(),
+  }), []);
+
+  useFrame(() => {
+    const geometry = line.current?.geometry;
+    if (!geometry) return;
+    const time = progress.current;
+    const draw = Math.min(time / 2.35, 1);
+    const t = Math.min(Math.max((time - 3) / 2.1, 0), 1);
+    const mix = t * t * (3 - 2 * t);
+    const attr = geometry.getAttribute("position") as BufferAttribute;
+    const end = loop.points.length - 1;
+    for (let i = 0; i <= end; i++) {
+      const previous = i === 0 ? end - 1 : i - 1;
+      const following = i === end ? 1 : i + 1;
+      point.copy(loop.points[i]).lerp(loop.end[i], mix);
+      prior.copy(loop.points[previous]).lerp(loop.end[previous], mix);
+      next.copy(loop.points[following]).lerp(loop.end[following], mix);
+      side.crossVectors(next.sub(prior), cameraAxis).normalize().multiplyScalar(0.009);
+      attr.setXYZ(i * 2, point.x + side.x, point.y + side.y, point.z + side.z);
+      attr.setXYZ(i * 2 + 1, point.x - side.x, point.y - side.y, point.z - side.z);
+    }
+    geometry.setDrawRange(0, Math.ceil(draw * end) * 6);
+    attr.needsUpdate = true;
+  });
+
+  return (
+    <mesh ref={line} frustumCulled={false} renderOrder={2}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[loop.vertices, 3]} />
+        <bufferAttribute attach="index" args={[loop.indices, 1]} />
+      </bufferGeometry>
+      <meshBasicMaterial color={GOLD} side={DoubleSide} depthTest={false} />
+    </mesh>
+  );
+}
+
+export default function GlobeScene({ scene, onFlightComplete }: {
+  scene: GlobeSceneName;
+  onFlightComplete: () => void;
+}) {
+  const flight = scene === "despegue";
+  const progress = useRef(0);
+  const complete = useRef(false);
+  const trail = useRef<Mesh<TubeGeometry>>(null);
+  const plane = useRef<Group>(null);
+  const cityDots = useRef<Group>(null);
+  const { points, land, shape, route, axis, cameraTarget, position, bearing, up, right } = useMemo(() => {
+    const route = routeCurve(LEGS[0], 0.23);
+    return {
+      route,
+      points: gridPoints(),
+      land: landPoints(),
+      shape: planeShape(),
+      axis: route.getPoint(0.61).normalize(),
+      cameraTarget: new Vector3(),
+      position: new Vector3(),
+      bearing: new Vector3(),
+      up: new Vector3(),
+      right: new Vector3(),
+    };
   }, []);
 
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[points, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        color="#D4AF37"
-        size={0.012}
-        sizeAttenuation
-        transparent
-        opacity={0.45}
-        depthWrite={false}
-      />
-    </points>
-  );
-}
+  useFrame(({ camera, size }, delta) => {
+    progress.current += delta;
+    const t = flight ? Math.min(progress.current / 6.4, 1) : 1;
+    const distance = Math.max(5.6, 5.05 * size.height / size.width);
+    cameraTarget.copy(axis);
+    if (flight) {
+      route.getPointAt(t, position);
+      route.getTangentAt(t, bearing);
+      cameraTarget.lerp(position.normalize(), 0.5).normalize();
+      route.getPointAt(t, position);
+    }
+    cameraTarget.multiplyScalar(distance);
+    if (progress.current < 0.09) camera.position.copy(cameraTarget);
+    else camera.position.lerp(cameraTarget, 1 - Math.exp(-delta * 2.6));
+    camera.lookAt(0, 0, 0);
 
-function buildCurve(from: City, to: City) {
-  const pts = greatCirclePoints(from.lat, from.lng, to.lat, to.lng, R + 0.04, 80);
-  const lifted = pts.map((p, i) => {
-    const t = i / (pts.length - 1);
-    const lift = Math.sin(t * Math.PI) * 0.18;
-    const v = new THREE.Vector3(...p);
-    v.normalize().multiplyScalar(R + 0.04 + lift);
-    return v;
-  });
-  return new THREE.CatmullRomCurve3(lifted);
-}
+    if (flight && trail.current && plane.current) {
+      trail.current.geometry.setDrawRange(0, Math.ceil(t * SEGMENTS) * RADIAL_SEGMENTS * 6);
+      plane.current.position.copy(position);
+      plane.current.quaternion.copy(camera.quaternion);
+      up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      right.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      plane.current.rotateZ(Math.atan2(-bearing.dot(right), bearing.dot(up)));
+    }
 
-function Arc({
-  from,
-  to,
-  animated = false,
-  progressRef,
-  color = "#D4AF37",
-}: {
-  from: City;
-  to: City;
-  animated?: boolean;
-  progressRef?: React.MutableRefObject<number>;
-  color?: string;
-}) {
-  const curve = useMemo(() => buildCurve(from, to), [from, to]);
-  const meshRef = useRef<THREE.Mesh>(null);
-  const fullGeo = useMemo(
-    () => new THREE.TubeGeometry(curve, 80, 0.012, 6, false),
-    [curve],
-  );
-
-  useFrame(() => {
-    if (!animated || !progressRef || !meshRef.current) return;
-    const segs = Math.max(2, Math.floor(80 * Math.max(0.05, progressRef.current)));
-    meshRef.current.geometry.dispose();
-    meshRef.current.geometry = new THREE.TubeGeometry(
-      curve,
-      segs,
-      0.012,
-      6,
-      false,
-    );
+    if (cityDots.current && !flight) {
+      cityDots.current.visible = progress.current < 4;
+    }
+    if (flight && t >= 1 && !complete.current) {
+      complete.current = true;
+      onFlightComplete();
+    }
   });
 
-  return (
-    <mesh ref={meshRef} geometry={fullGeo}>
-      <meshBasicMaterial color={color} transparent opacity={0.9} />
-    </mesh>
-  );
-}
-
-function PlaneMarker({
-  from,
-  to,
-  progressRef,
-}: {
-  from: City;
-  to: City;
-  progressRef: React.MutableRefObject<number>;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-  const curve = useMemo(() => buildCurve(from, to), [from, to]);
-
-  useFrame(() => {
-    if (!ref.current) return;
-    const t = Math.min(1, Math.max(0, progressRef.current));
-    const p = curve.getPoint(t);
-    ref.current.position.copy(p);
-    const tangent = curve.getTangent(t);
-    ref.current.lookAt(p.clone().add(tangent));
-  });
-
-  return (
-    <mesh ref={ref}>
-      <coneGeometry args={[0.035, 0.1, 4]} />
-      <meshBasicMaterial color="#FFF8E7" />
-    </mesh>
-  );
-}
-
-function CityDots({ ids }: { ids: City["id"][] }) {
   return (
     <>
-      {ids.map((id) => {
-        const c = CITIES[id];
-        const [x, y, z] = latLngToVec3(c.lat, c.lng, R + 0.02);
-        return (
-          <mesh key={id} position={[x, y, z]}>
-            <sphereGeometry args={[0.03, 12, 12]} />
-            <meshBasicMaterial color="#E8B84A" />
-          </mesh>
-        );
-      })}
-    </>
-  );
-}
-
-export type GlobeMode = "aus-roma" | "roma-flr" | "flr-vie" | "finale";
-
-interface GlobeSceneProps {
-  mode: GlobeMode;
-  onFlightComplete?: () => void;
-}
-
-export default function GlobeScene({
-  mode,
-  onFlightComplete,
-}: GlobeSceneProps) {
-  const group = useRef<THREE.Group>(null);
-  const reduced = useReducedMotion();
-  const progressRef = useRef(0);
-  const done = useRef(false);
-  const camTarget = useRef(new THREE.Vector3(0, 0.3, 4.2));
-
-  const flying =
-    mode === "aus-roma" || mode === "roma-flr" || mode === "flr-vie";
-
-  useEffect(() => {
-    progressRef.current = 0;
-    done.current = false;
-  }, [mode]);
-
-  useFrame((state, delta) => {
-    if (group.current && !reduced) {
-      group.current.rotation.y += delta * 0.04;
-    }
-
-    if (flying) {
-      if (reduced) {
-        progressRef.current = 1;
-      } else {
-        progressRef.current = Math.min(1, progressRef.current + delta * 0.12);
-      }
-      if (progressRef.current >= 1 && !done.current) {
-        done.current = true;
-        onFlightComplete?.();
-      }
-    }
-
-    if (!reduced) {
-      state.camera.position.lerp(camTarget.current, 0.02);
-      state.camera.lookAt(0, 0, 0);
-    }
-  });
-
-  const austin = CITIES.austin;
-  const roma = CITIES.roma;
-  const flr = CITIES.florencia;
-  const vie = CITIES.viena;
-
-  return (
-    <group ref={group}>
+      <ambientLight intensity={1.0} color="#b89bc1" />
+      <directionalLight position={[1, 3, 4]} intensity={1.75} color="#e4966e" />
       <mesh>
-        <sphereGeometry args={[R * 0.98, 48, 48]} />
-        <meshBasicMaterial color="#0d0810" transparent opacity={0.92} />
+        <sphereGeometry args={[RADIUS * 0.996, 48, 32]} />
+        <meshStandardMaterial color="#2c243c" roughness={0.92} metalness={0.04} />
       </mesh>
-      <GridSphere />
-
-      {mode === "aus-roma" && (
+      <mesh>
+        <sphereGeometry args={[RADIUS * 1.06, 40, 28]} />
+        <shaderMaterial vertexShader={AURA_VERTEX} fragmentShader={AURA_FRAGMENT}
+          side={BackSide} depthWrite={false} blending={AdditiveBlending} transparent />
+      </mesh>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[land, 3]} />
+        </bufferGeometry>
+        <pointsMaterial color="#ffd09c" size={0.014} transparent opacity={0.72} depthWrite={false} />
+      </points>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[points, 3]} />
+        </bufferGeometry>
+        <pointsMaterial color="#eab86c" size={0.012} transparent opacity={0.39} depthWrite={false} />
+      </points>
+      <group ref={cityDots}>
+        {(flight ? [CITIES.austin, CITIES.roma] : Object.values(CITIES)).map((city) => (
+          <mesh key={city.id} position={latLngToVec3(city.lat, city.lng, RADIUS + 0.018)}>
+            <sphereGeometry args={[0.036, 12, 8]} />
+            <meshBasicMaterial color="#ffdda0" />
+          </mesh>
+        ))}
+      </group>
+      {flight ? (
         <>
-          <Arc from={austin} to={roma} animated progressRef={progressRef} />
-          <PlaneMarker from={austin} to={roma} progressRef={progressRef} />
-          <CityDots ids={["austin", "roma"]} />
+          <mesh ref={trail}>
+            <tubeGeometry args={[route, SEGMENTS, 0.014, RADIAL_SEGMENTS, false]} />
+            <meshBasicMaterial color={GOLD} />
+          </mesh>
+          <group ref={plane}>
+            <mesh scale={0.13} renderOrder={3}>
+              <shapeGeometry args={[shape]} />
+              <meshBasicMaterial color="#fff0d3" depthTest={false} />
+            </mesh>
+          </group>
         </>
-      )}
-
-      {mode === "roma-flr" && (
-        <>
-          <Arc from={austin} to={roma} color="#8a7040" />
-          <Arc from={roma} to={flr} animated progressRef={progressRef} />
-          <PlaneMarker from={roma} to={flr} progressRef={progressRef} />
-          <CityDots ids={["austin", "roma", "florencia"]} />
-        </>
-      )}
-
-      {mode === "flr-vie" && (
-        <>
-          <Arc from={austin} to={roma} color="#8a7040" />
-          <Arc from={roma} to={flr} color="#8a7040" />
-          <Arc from={flr} to={vie} animated progressRef={progressRef} />
-          <PlaneMarker from={flr} to={vie} progressRef={progressRef} />
-          <CityDots ids={["austin", "roma", "florencia", "viena"]} />
-        </>
-      )}
-
-      {mode === "finale" && (
-        <>
-          {LEGS.map((leg) => (
-            <Arc
-              key={`${leg.from}-${leg.to}`}
-              from={CITIES[leg.from]}
-              to={CITIES[leg.to]}
-            />
-          ))}
-          <CityDots ids={["austin", "roma", "florencia", "viena"]} />
-          <InfinityRing />
-        </>
-      )}
-    </group>
-  );
-}
-
-function InfinityRing() {
-  const ref = useRef<THREE.Mesh>(null);
-  const geometry = useMemo(() => {
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 200; i++) {
-      const t = (i / 200) * Math.PI * 2;
-      const scale = 0.55;
-      const x = (scale * Math.cos(t)) / (1 + Math.sin(t) ** 2);
-      const y = (scale * Math.sin(t) * Math.cos(t)) / (1 + Math.sin(t) ** 2);
-      pts.push(new THREE.Vector3(x, y + 0.1, R + 0.35));
-    }
-    const curve = new THREE.CatmullRomCurve3(pts, true);
-    return new THREE.TubeGeometry(curve, 200, 0.018, 8, true);
-  }, []);
-
-  useFrame((_, delta) => {
-    if (ref.current) {
-      ref.current.rotation.z += delta * 0.15;
-    }
-  });
-
-  return (
-    <mesh ref={ref} geometry={geometry}>
-      <meshBasicMaterial color="#FFD700" transparent opacity={0.85} />
-    </mesh>
+      ) : <FinaleRoute progress={progress} cameraAxis={axis} />}
+    </>
   );
 }

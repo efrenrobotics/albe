@@ -40,11 +40,11 @@ countdown → message → cake → flowers → concert → video
 
 countdown → abrir → aeropuerto → despegue → roma → tren → florencia → vuelo-viena → viena → recuerdos → final
 
-- Unlock: Dec 8, 2026 00:00 CST (`UNLOCK_DATE` in `app/aniversario/data/trip.ts`). Bypass with `?bypass=true`.
-- Trip data (cities, dates, coordinates, optional ambient paths) lives in `trip.ts` — never invent facts.
-- Audio: `app/aniversario/lib/audio.ts` (shared `AudioContext`, music + SFX buses, ducking). Music at `/audio/aeropuerto.mp3` — fail silent if missing. Unlock audio only on the Abrir tap.
-- 3D globe: `app/aniversario/components/three/*`, imported via `next/dynamic` with `ssr: false`.
-- Sign copy as Freni.
+- The route unlocks December 8, 2026 at midnight CST. Use `/aniversario?bypass=true` to start at Abrir. Add `&phase=<phase>` to preview an individual scene.
+- `app/aniversario/data/trip.ts` holds the itinerary, coordinates, and optional per-city dates, nights, and ambient tracks. Add city dates once confirmed.
+- `app/aniversario/page.tsx` checks which audio files exist at prerender time. The client journey uses one Web Audio context, unlocked on the Abrir tap. `/audio/aeropuerto.mp3` supplies the song. The engine, bells, train, splash, flap board, market chimes, and waltz are synthesized.
+- One lazy WebGL canvas handles takeoff and the finale. Reduced-motion and WebGL fallback scenes use SVG. The city scenes and travel transitions live in `app/aniversario/components/`.
+- The memories chapter uses photos from `public/photos/` and `public/photos/aniversario/`. Sign the note as Freni.
 
 ## 3D Components
 
@@ -66,4 +66,4 @@ const FloatingScene3D = dynamic(() => import("./three/FloatingScene3D"), { ssr: 
 
 - `useSearchParams()` requires a `<Suspense>` boundary.
 - All UI copy is in Spanish (informal / Venezuelan flavor).
-- Journey pages are client components (`"use client"`); `layout.tsx` is the only server component.
+- The anniversary page is a server wrapper around `Journey.tsx`. The other journey pages are client components.

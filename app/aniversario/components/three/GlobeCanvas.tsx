@@ -1,31 +1,28 @@
 "use client";
 
-import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import GlobeScene, { type GlobeMode } from "./GlobeScene";
-
-interface Props {
-  mode: GlobeMode;
-  onFlightComplete?: () => void;
-  className?: string;
-}
+import GlobeScene from "./GlobeScene";
+import type { GlobeSceneName } from "../GlobeBackdrop";
 
 export default function GlobeCanvas({
-  mode,
+  scene,
+  onReady,
   onFlightComplete,
-  className = "absolute inset-0",
-}: Props) {
+}: {
+  scene: GlobeSceneName | null;
+  onReady: () => void;
+  onFlightComplete: () => void;
+}) {
   return (
-    <div className={className}>
+    <div className="absolute inset-0">
       <Canvas
-        camera={{ position: [0, 0.35, 4.2], fov: 42 }}
+        camera={{ fov: 39, near: 0.1, far: 40 }}
         dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        frameloop={scene ? "always" : "demand"}
+        gl={{ antialias: true, alpha: true }}
+        onCreated={onReady}
       >
-        <Suspense fallback={null}>
-          <ambientLight intensity={0.4} />
-          <GlobeScene mode={mode} onFlightComplete={onFlightComplete} />
-        </Suspense>
+        {scene && <GlobeScene key={scene} scene={scene} onFlightComplete={onFlightComplete} />}
       </Canvas>
     </div>
   );

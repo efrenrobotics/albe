@@ -39,9 +39,11 @@
   --firenze-cream: #F5E6D3;
   --firenze-terracotta: #B85C38;
   --firenze-dusk: #3D1F2E;
+  --firenze-night: #231529;
 
   /* Aniversario — Wien */
   --wien-midnight: #0B1A2E;
+  --wien-twilight: #273f61;
   --wien-snow: #F0F4F8;
   --wien-gold: #D4AF37;
   --wien-light: #FFE6A0;
@@ -80,8 +82,10 @@
   --color-firenze-cream: var(--firenze-cream);
   --color-firenze-terracotta: var(--firenze-terracotta);
   --color-firenze-dusk: var(--firenze-dusk);
+  --color-firenze-night: var(--firenze-night);
 
   --color-wien-midnight: var(--wien-midnight);
+  --color-wien-twilight: var(--wien-twilight);
   --color-wien-snow: var(--wien-snow);
   --color-wien-gold: var(--wien-gold);
   --color-wien-light: var(--wien-light);
