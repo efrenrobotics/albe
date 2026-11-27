@@ -1,60 +1,29 @@
-export default function RomaSkyline({
-  className,
-  opacity = 1,
-}: {
-  className?: string;
-  opacity?: number;
-}) {
+export default function RomaSkyline({ className }: { className?: string }) {
+  const arches = Array.from({ length: 11 }, (_, i) => 280 + i * 28);
   return (
-    <svg
-      viewBox="0 0 800 280"
-      className={className}
-      preserveAspectRatio="xMidYMax meet"
-      aria-hidden
-    >
-      {/* Distant pines */}
-      <g opacity={opacity * 0.45} fill="#1a0e0a">
-        <ellipse cx="80" cy="220" rx="18" ry="50" />
-        <rect x="76" y="220" width="8" height="40" />
-        <ellipse cx="720" cy="210" rx="16" ry="45" />
-        <rect x="716" y="210" width="8" height="50" />
-        <ellipse cx="680" cy="225" rx="12" ry="35" />
-        <rect x="677" y="225" width="6" height="35" />
+    <svg viewBox="0 0 900 290" className={className} preserveAspectRatio="xMidYMax slice" aria-hidden>
+      <path d="M0 218q80-13 135-10t109 3q54-12 116-7t147 7q61-17 152-12t241-14v105H0Z" fill="var(--roma-terracotta)" opacity=".28" />
+      <g opacity=".72" fill="#49281e">
+        <path d="M0 245v-24h19v-28h31v22h37v-39h21v-22h37v24h58v36h44v-27h36v59Z" />
+        <path d="M122 204v-41q8-31 31-38v-13h4v13q25 7 34 38v45Z" />
+        <path d="M630 245v-62h32v-23h27v14h26v-39h28v37h33v-14h32v43h29v-25h27v33h36v78Z" />
+        <path d="M737 185v-36q-1-38 38-55l3-13 3 13q38 17 37 55v36Z" />
       </g>
 
-      {/* Domes */}
-      <g opacity={opacity * 0.7} fill="#2A1510">
-        <path d="M200 260 L200 180 Q240 120 280 180 L280 260 Z" />
-        <ellipse cx="240" cy="180" rx="42" ry="28" />
-        <rect x="232" y="140" width="16" height="30" />
-        <circle cx="240" cy="136" r="8" />
+      <path d="M251 243v-97l15-10v-13l39-14 52-5 46 5v8l51 10 20 16 88 16 35 19v71Z" fill="#392119" />
+      <g fill="none" stroke="#ab6c3d" strokeOpacity=".6" strokeWidth="2">
+        <path d="M254 154q72-21 154-14l171 40M253 183q71-21 162-13l180 37M253 215q70-19 161-9l181 28" />
+        {arches.map((x, index) => {
+          const y = 185 + Math.max(index - 4, 0) * 4;
+          return <path key={x} d={`M${x} ${y}v-13q7-11 14 0v13m-14 26v-13q7-11 14 0v13`} />;
+        })}
       </g>
-
-      {/* Colosseum arches */}
-      <g opacity={opacity} fill="#3a2218">
-        <rect x="340" y="160" width="220" height="100" rx="8" />
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <path
-            key={i}
-            d={`M${360 + i * 34} 250 L${360 + i * 34} 190 Q${377 + i * 34} 170 ${394 + i * 34} 190 L${394 + i * 34} 250 Z`}
-            fill="#1a0e0a"
-          />
+      <g fill="#201412">
+        {[74, 817, 865].map((x, i) => (
+          <path key={x} d={`M${x} 252v-${82 - i * 7}q-31 5-46-9-6-16 19-25 29-16 50-7 37-2 45 18 0 24-61 24v82Z`} />
         ))}
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <path
-            key={`t${i}`}
-            d={`M${360 + i * 34} 185 L${360 + i * 34} 155 Q${377 + i * 34} 140 ${394 + i * 34} 155 L${394 + i * 34} 185 Z`}
-            fill="#1a0e0a"
-          />
-        ))}
+        <path d="M0 248q146-21 272-12 114-10 249 5 174-12 379-5v55H0Z" />
       </g>
-
-      {/* Foreground ground */}
-      <path
-        d="M0 260 Q200 245 400 255 T800 250 L800 280 L0 280 Z"
-        fill="#1a0e0a"
-        opacity={opacity}
-      />
     </svg>
   );
 }

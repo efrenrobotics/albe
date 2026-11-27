@@ -1,35 +1,28 @@
 "use client";
 
-import { useMemo } from "react";
 import { motion } from "motion/react";
+import { seeded } from "../../lib/seeded-random";
+
+const WAVES = Array.from({ length: 5 }, (_, i) => ({
+  id: i,
+  y: 60 + i * 10,
+  duration: 12 + i * 4,
+  delay: i * 1.5,
+  opacity: 0.04 + i * 0.015,
+}));
+
+const random = seeded(2026);
+const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: random() * 100,
+  top: random() * 100,
+  size: 1 + random() * 3,
+  duration: 6 + random() * 8,
+  delay: random() * 6,
+  opacity: 0.1 + random() * 0.25,
+}));
 
 export default function OceanBackground() {
-  const waves = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, i) => ({
-        id: i,
-        y: 60 + i * 10,
-        duration: 12 + i * 4,
-        delay: i * 1.5,
-        opacity: 0.04 + i * 0.015,
-      })),
-    []
-  );
-
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        size: 1 + Math.random() * 3,
-        duration: 6 + Math.random() * 8,
-        delay: Math.random() * 6,
-        opacity: 0.1 + Math.random() * 0.25,
-      })),
-    []
-  );
-
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       {/* Base gradient */}
@@ -42,7 +35,7 @@ export default function OceanBackground() {
       />
 
       {/* Animated wave layers */}
-      {waves.map((wave) => (
+      {WAVES.map((wave) => (
         <motion.div
           key={wave.id}
           className="absolute left-0 right-0"
@@ -66,7 +59,7 @@ export default function OceanBackground() {
       ))}
 
       {/* Floating light particles */}
-      {particles.map((p) => (
+      {PARTICLES.map((p) => (
         <motion.div
           key={p.id}
           className="absolute rounded-full"

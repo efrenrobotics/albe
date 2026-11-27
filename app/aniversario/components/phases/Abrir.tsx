@@ -1,50 +1,29 @@
 "use client";
 
 import { motion } from "motion/react";
-import { aniversarioAudio } from "../../lib/audio";
+import PhaseShell from "../PhaseShell";
 
-interface Props {
-  onContinue: () => void;
-}
-
-export default function Abrir({ onContinue }: Props) {
-  const handleOpen = async () => {
-    await aniversarioAudio.unlock();
-    aniversarioAudio.startMusic();
-    onContinue();
-  };
-
+export default function Abrir({ onContinue }: { onContinue: () => void }) {
   return (
-    <motion.section
-      className="fixed inset-0 z-10 flex flex-col items-center justify-center bg-warm-black px-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.7 }}
-    >
-      <motion.p
-        className="font-serif text-3xl sm:text-5xl md:text-6xl text-center text-white/90 mb-12"
-        initial={{ opacity: 0, y: 16 }}
+    <PhaseShell>
+      <motion.h1
+        className="font-serif text-center text-[clamp(3.1rem,10vw,7.5rem)] leading-tight"
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       >
         Un año, Albe.
-      </motion.p>
-
+      </motion.h1>
       <motion.button
-        onClick={handleOpen}
-        className="min-h-12 min-w-[8rem] px-10 py-3.5 rounded-full font-semibold text-lg text-warm-black cursor-pointer border border-soft-gold/40"
-        style={{
-          background: "linear-gradient(135deg, #D4AF37, #E8B84A)",
-        }}
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label="Abrir el viaje"
+        type="button"
+        onClick={onContinue}
+        className="mt-10 min-h-12 rounded-full border border-soft-gold px-10 font-mono text-sm font-semibold uppercase tracking-[.22em] text-warm-black bg-gradient-to-br from-wien-light to-soft-gold cursor-pointer"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        whileTap={{ scale: 0.97 }}
       >
         Abrir
       </motion.button>
-    </motion.section>
+    </PhaseShell>
   );
 }

@@ -1,104 +1,65 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
 import FirenzeSkyline from "../svg/FirenzeSkyline";
 import { CITIES } from "../../data/trip";
-import { aniversarioAudio } from "../../lib/audio";
+import type { AniversarioAudio } from "../../lib/audio";
+import styles from "../../journey.module.css";
 
-interface Props {
-  onContinue: () => void;
-}
-
-export default function Florencia({ onContinue }: Props) {
-  const [sunset, setSunset] = useState(0.25);
-  const [canAdvance, setCanAdvance] = useState(false);
-  const done = sunset >= 0.92;
+export default function Florencia({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
+  const [sunset, setSunset] = useState(0);
+  const [done, setDone] = useState(false);
+  const reduced = useReducedMotion();
+  const city = CITIES.florencia;
 
   useEffect(() => {
-    void aniversarioAudio.playAmbient(CITIES.florencia.ambient);
-    return () => aniversarioAudio.stopAmbient();
-  }, []);
-
-  useEffect(() => {
-    if (!done || canAdvance) return;
-    const t = window.setTimeout(() => setCanAdvance(true), 1200);
-    return () => clearTimeout(t);
-  }, [done, canAdvance]);
-
-  const sky = `linear-gradient(180deg,
-    hsl(${220 - sunset * 80}, ${40 + sunset * 30}%, ${12 + sunset * 18}%) 0%,
-    hsl(${30 + sunset * 10}, ${70 + sunset * 20}%, ${35 + sunset * 25}%) 45%,
-    hsl(${15}, ${60 + sunset * 20}%, ${45 + sunset * 15}%) 100%)`;
+    void audio.playAmbient(city.ambient);
+    return () => {
+      audio.stopAmbient();
+      audio.setSunset(0);
+    };
+  }, [audio, city.ambient]);
 
   return (
-    <PhaseShell
-      onAdvance={onContinue}
-      canAdvance={canAdvance}
-      hint="Toca para volar a Viena"
-      background={sky}
-    >
-      <div className="relative z-10 flex flex-col items-center px-6 w-full max-w-lg">
-        <motion.h2
-          className="font-serif text-5xl sm:text-7xl font-bold text-firenze-cream text-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          Firenze
-        </motion.h2>
-        <p className="font-mono text-sm text-firenze-rose mt-2 tracking-widest">
-          {CITIES.florencia.dateLabel}
-        </p>
-
-        <div className="relative w-full mt-8 h-48 sm:h-56" data-no-advance>
-          <FirenzeSkyline
-            className="absolute inset-x-0 bottom-0 w-full h-full"
-            fill={`rgba(61, 31, 46, ${0.7 + sunset * 0.25})`}
+    <PhaseShell onAdvance={onContinue} canAdvance={done} hint="Volar a Viena">
+      <div className="relative z-10 w-full max-w-[46rem] text-center">
+        <p className={styles.folio}>Piazzale Michelangelo{city.dateLabel && ` · ${city.dateLabel}`}</p>
+        <h2 className="font-serif text-6xl leading-none sm:text-8xl">{city.displayName}</h2>
+        <div className="relative isolate mt-7 mx-auto overflow-hidden rounded-t-[48%] border border-firenze-cream/30 aspect-[1.7] max-w-[39rem] bg-firenze-night" data-no-advance>
+          <div className="absolute inset-0 bg-gradient-to-b from-wien-twilight to-firenze-rose/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-firenze-dusk via-firenze-rose to-roma-gold" style={{ opacity: sunset }} />
+          <div
+            className="absolute left-[29%] top-[22%] size-[19%] rounded-full bg-wien-light blur-md"
+            style={{ opacity: 0.26 + sunset * 0.52, transform: reduced ? undefined : `translate(${sunset * 85}%, ${sunset * 145}%)` }}
           />
-          {/* Sun */}
-          <motion.div
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              width: 48 + sunset * 24,
-              height: 48 + sunset * 24,
-              right: `${20 + sunset * 30}%`,
-              top: `${15 + (1 - sunset) * 35}%`,
-              background: `radial-gradient(circle, #FFE6A0, #E8B84A 50%, transparent 70%)`,
-              boxShadow: `0 0 ${40 + sunset * 60}px rgba(232,184,74,${0.3 + sunset * 0.4})`,
-            }}
+          <div
+            className="absolute left-[32%] top-[27%] aspect-square w-[13%] rounded-full bg-wien-light"
+            style={{ transform: reduced ? undefined : `translate(${sunset * 123}%, ${sunset * 216}%)` }}
           />
+          <FirenzeSkyline className="absolute inset-x-0 bottom-0 h-[79%] w-full" fill="var(--firenze-dusk)" />
+          <div className="absolute bottom-0 inset-x-0 h-[12%] bg-firenze-dusk" />
         </div>
-
-        <div className="w-full max-w-xs mt-6" data-no-advance>
-          <label
-            htmlFor="sunset-slider"
-            className="block text-xs text-white/50 text-center mb-2 tracking-wide"
-          >
+        <div className="mx-auto mt-5 max-w-[21rem]" data-no-advance>
+          <label htmlFor="sunset-slider" className="block font-mono text-xs uppercase tracking-widest text-firenze-cream">
             Arrastra el atardecer
           </label>
-          <input
-            id="sunset-slider"
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(sunset * 100)}
-            onChange={(e) => setSunset(Number(e.target.value) / 100)}
-            className="w-full h-11 accent-firenze-terracotta cursor-pointer"
-            aria-label="Controlar el atardecer sobre el Duomo"
-            data-no-advance
+          <input id="sunset-slider" type="range" min={0} max={100} value={Math.round(sunset * 100)}
+            onChange={(event) => {
+              const next = Number(event.currentTarget.value) / 100;
+              setSunset(next);
+              audio.setSunset(next);
+              if (next >= 0.92) setDone(true);
+            }}
+            className="w-full min-h-11 accent-wien-light cursor-pointer"
           />
         </div>
-
-        {done && (
-          <motion.p
-            className="mt-6 font-serif italic text-firenze-cream text-center text-base sm:text-lg"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+        <div className="min-h-7 text-center">
+          {done && <motion.p role="status" className="font-serif italic text-firenze-cream" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             El atardecer más bonito... contigo al lado.
-          </motion.p>
-        )}
+          </motion.p>}
+        </div>
       </div>
     </PhaseShell>
   );

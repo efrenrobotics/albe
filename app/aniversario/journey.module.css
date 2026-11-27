@@ -1,0 +1,334 @@
+.journey {
+  --sky: var(--warm-black);
+  --light: #563123;
+  --paper: #fff2d8;
+  --ease: cubic-bezier(.23, 1, .32, 1);
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  overflow: clip;
+  color: var(--paper);
+  background: var(--sky);
+  transition: background-color .8s var(--ease);
+}
+
+.journey[data-theme="terminal"] { --sky: #29141b; --light: #654029; }
+.journey[data-theme="altitude"] { --sky: #100e1a; --light: #393047; }
+.journey[data-theme="roma"] { --sky: var(--roma-night); --light: var(--roma-terracotta); }
+.journey[data-theme="firenze"] { --sky: var(--firenze-night); --light: var(--firenze-terracotta); }
+.journey[data-theme="wien"] { --sky: var(--wien-midnight); --light: var(--wien-twilight); }
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at .5px .5px, #ffe1b426 .5px, transparent .8px),
+    radial-gradient(ellipse at 50% 76%, var(--light), transparent 67%);
+  background-size: 6px 6px, cover;
+  opacity: .44;
+  mask-image: radial-gradient(ellipse at center, #000, #000a 70%, transparent);
+}
+
+.stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100dvh;
+  padding: max(4.8rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem)) max(1rem, env(safe-area-inset-left));
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: clip;
+  touch-action: pan-y;
+}
+
+.journey :is(button, a, input):focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 4px;
+}
+
+.advance {
+  position: absolute;
+  z-index: 3;
+  inset: auto auto max(1rem, calc(env(safe-area-inset-bottom) + .5rem)) 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: .8em;
+  min-height: 44px;
+  max-width: 92vw;
+  padding-inline: 1.1rem;
+  border-radius: 999px;
+  background: #160e18e8;
+  border: 1px solid #f6d88c55;
+  color: #ffe6ac;
+  white-space: nowrap;
+  font: 500 .68rem var(--font-mono);
+  letter-spacing: .085em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.folio {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  margin-bottom: .6rem;
+  font: 500 .66rem var(--font-mono);
+  color: #ffe4ab;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+
+.folio::before, .folio::after {
+  content: "";
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: .6;
+}
+
+.globe {
+  position: fixed;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: 72dvh;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .55s var(--ease);
+}
+
+.globe[data-scene="despegue"], .globe[data-scene="final"] { opacity: 1; }
+.globe[data-scene="final"] { height: 51dvh; }
+.globe canvas { display: block; }
+
+.snow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.snow i {
+  position: absolute;
+  top: -10px;
+  border-radius: 50%;
+  background: var(--wien-snow);
+  animation: snowfall var(--duration) linear infinite;
+}
+
+@keyframes snowfall {
+  to { transform: translate3d(40px, calc(100dvh + 20px), 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey .snow, .journey :global(.animate-float-up) { display: none; }
+  .folio, .advance { animation: none; }
+}
+
+.ticket {
+  position: relative;
+  padding: 1.3rem clamp(1.15rem, 5vw, 2.2rem) .95rem;
+  border-radius: .75rem;
+  color: #321b19;
+  background:
+    repeating-linear-gradient(0deg, #8a562508 0 1px, transparent 1px 3px),
+    linear-gradient(135deg, #fff0d1, #e9ca9e);
+  box-shadow: 0 18px 60px #13090973;
+}
+
+.ticketHead, .ticketDetails dt, .ticketStub { font-family: var(--font-mono); }
+.ticketHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid #55361e50;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.ticketRoute {
+  display: flex;
+  gap: clamp(.75rem, 4vw, 2.25rem);
+  align-items: center;
+  margin: .5rem 0 .8rem;
+  font-family: var(--font-serif);
+  font-size: clamp(2.9rem, 12vw, 4.5rem);
+  line-height: 1.09;
+  letter-spacing: -.055em;
+}
+
+.ticketDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .65rem 1rem;
+  padding-bottom: 1rem;
+}
+
+.ticketDetails dt {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .11em;
+}
+
+.ticketDetails dd { margin-top: .08rem; font-size: .91rem; font-weight: 600; }
+.ticketDetails > :last-child { grid-column: 1 / -1; }
+
+.ticketStub {
+  position: relative;
+  margin-inline: calc(-1 * clamp(1.15rem, 5vw, 2.2rem));
+  border-top: 1px dashed #55361e88;
+  padding-top: .8rem;
+  text-align: center;
+}
+
+.ticketStub::before, .ticketStub::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--sky);
+}
+.ticketStub::before { left: -10px; }
+.ticketStub::after { right: -10px; }
+
+.tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 3.05rem;
+  border-radius: .25rem;
+  background: linear-gradient(#332626 50%, #23191c 50%);
+  color: #ffdfa2;
+  perspective: 110px;
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 50% .18rem auto;
+  height: 1px;
+  background: #130a0ca0;
+  pointer-events: none;
+}
+
+.coin {
+  position: absolute;
+  bottom: .3rem;
+  left: 62%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 3px double #87601e;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, #ffe4a3, #d7a946 62%, #ad7926);
+  box-shadow: 0 4px 12px #21100d77;
+  color: #51350f;
+  font-size: 1.35rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.photoStack {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: min(70vw, 18rem);
+  aspect-ratio: 4 / 5;
+  margin: 2rem auto 0;
+  color: #34241c;
+  cursor: pointer;
+}
+
+.photoStack::before, .photoStack::after, .photo, .futurePhoto {
+  background: #fff0d4;
+  box-shadow: 0 4px 18px #140a0880;
+}
+
+.photoStack::before, .photoStack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.photoStack::before { transform: rotate(6deg) translateX(1%); }
+.photoStack::after { transform: rotate(-7deg) translateX(-1%); }
+
+.photo {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  padding: .7rem;
+  transform: rotate(-2deg);
+}
+
+.photoImage {
+  position: relative;
+  display: block;
+  height: 83%;
+  background: #7e5142;
+}
+
+.photoImage img { object-fit: cover; }
+
+.futurePhoto {
+  padding: .45rem .45rem 1.4rem;
+  color: #34241c;
+}
+.futurePhoto:first-child { transform: rotate(-4deg); }
+.futurePhoto:last-child { transform: rotate(4deg); }
+
+.journey::after {
+  position: fixed;
+  z-index: 4;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, #0e07112b, transparent 16% 84%, #0e07112b);
+}
+
+.journey[data-theme="tarmac"] .atmosphere {
+  background-image:
+    radial-gradient(ellipse at 50% 63%, #98604475, transparent 45%),
+    repeating-linear-gradient(90deg, transparent 0 147px, #ffdda209 147px 148px),
+    radial-gradient(circle at .5px .5px, #ffe1b42b .5px, transparent .8px);
+  background-size: cover, cover, 6px 6px;
+  opacity: .85;
+}
+
+.journey[data-theme="tarmac"] .atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 69% 0 0;
+  background:
+    radial-gradient(ellipse at center, #ffcb75c2 .7px, transparent 1.4px) center top / 1rem .9rem,
+    linear-gradient(91deg, transparent 47.5%, #fce5b940 49.4%, transparent 49.7%, transparent 50.3%, #fce5b940 50.6%, transparent 52.5%);
+  clip-path: polygon(48% 0, 52% 0, 82% 100%, 18% 100%);
+  mask-image: linear-gradient(transparent, #000 35%, transparent 90%);
+  opacity: .48;
+}
+
+.journey[data-theme="altitude"] .atmosphere {
+  background-image:
+    radial-gradient(ellipse at 50% 28%, #80617a57, transparent 52%),
+    radial-gradient(circle at 2px 5px, #fde9cbbb .55px, transparent 1px),
+    radial-gradient(circle at 14px 20px, #f8daaa97 .5px, transparent 1.3px);
+  background-size: cover, 47px 59px, 67px 79px;
+  opacity: .57;
+}
+
+.journey[data-theme="altitude"] .globe {
+  background: radial-gradient(ellipse at 50% 46%, #6750751c, transparent 59%);
+}

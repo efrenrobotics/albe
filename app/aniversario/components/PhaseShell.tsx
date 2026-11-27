@@ -1,65 +1,72 @@
 "use client";
 
-import { useRef, useCallback, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { motion } from "motion/react";
-import AdvanceHint from "./AdvanceHint";
+import styles from "../journey.module.css";
 
 interface PhaseShellProps {
   children: ReactNode;
   onAdvance?: () => void;
-  /** When false, taps/swipes won't advance (interaction phases) */
   canAdvance?: boolean;
   hint?: string;
-  showHint?: boolean;
   className?: string;
   background?: string;
 }
+
+const CONTROLS = "button, a, input, [data-no-advance]";
 
 export default function PhaseShell({
   children,
   onAdvance,
   canAdvance = true,
-  hint,
-  showHint = true,
+  hint = "Toca para continuar",
   className = "",
   background,
 }: PhaseShellProps) {
-  const startY = useRef<number | null>(null);
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const advanced = useRef(false);
 
-  const tryAdvance = useCallback(() => {
+  const advance = () => {
     if (!canAdvance || !onAdvance || advanced.current) return;
     advanced.current = true;
     onAdvance();
-  }, [canAdvance, onAdvance]);
+  };
 
   return (
     <motion.section
-      className={`fixed inset-0 z-10 flex flex-col items-center justify-center overflow-hidden touch-pan-y ${className}`}
+      className={`${styles.stage} ${className}`}
       style={{ background }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      onClick={(e) => {
-        const t = e.target as HTMLElement;
-        if (t.closest("button, a, input, [role='button'], [data-no-advance]"))
+      transition={{ duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
+      onClick={(event) => {
+        if (!(event.target as Element).closest(CONTROLS)) advance();
+      }}
+      onTouchStart={(event) => {
+        if (event.touches.length !== 1 || (event.target as Element).closest(CONTROLS)) {
+          touch.current = null;
           return;
-        tryAdvance();
+        }
+        const { clientX: x, clientY: y } = event.touches[0];
+        touch.current = { x, y };
       }}
-      onTouchStart={(e) => {
-        startY.current = e.touches[0].clientY;
+      onTouchCancel={() => { touch.current = null; }}
+      onTouchEnd={(event) => {
+        if (!touch.current) return;
+        const point = event.changedTouches[0];
+        const dx = touch.current.x - point.clientX;
+        const dy = touch.current.y - point.clientY;
+        touch.current = null;
+        if (dx > 60 || dy > 60) advance();
       }}
-      onTouchEnd={(e) => {
-        if (startY.current == null) return;
-        const dy = startY.current - e.changedTouches[0].clientY;
-        startY.current = null;
-        if (dy > 60) tryAdvance();
-      }}
-      role="region"
     >
       {children}
-      <AdvanceHint label={hint} visible={showHint && canAdvance} />
+      {onAdvance && canAdvance && (
+        <button className={styles.advance} type="button" onClick={advance}>
+          {hint}<span aria-hidden>→</span>
+        </button>
+      )}
     </motion.section>
   );
 }

@@ -3,7 +3,7 @@
 export const UNLOCK_DATE = new Date("2026-12-08T00:00:00-06:00"); // Dec 8, 2026 00:00 CST
 
 export const MUSIC = {
-  /** "Aeropuerto" by Camilo — Efren adds the file; fail silent if missing */
+  /** "Aeropuerto" by Camilo */
   aeropuerto: "/audio/aeropuerto.mp3",
   volume: 0.4,
   duckedVolume: 0.15,
@@ -18,7 +18,7 @@ export interface City {
   code: string;
   lat: number;
   lng: number;
-  dateLabel: string;
+  dateLabel?: string;
   nights?: number;
   /** Optional ambient track path — used only if the file exists */
   ambient?: string;
@@ -41,9 +41,6 @@ export const CITIES: Record<City["id"], City> = {
     code: "FCO",
     lat: 41.9,
     lng: 12.5,
-    dateLabel: "9–12 dic",
-    nights: 3,
-    ambient: "/audio/roma-ambient.mp3",
   },
   florencia: {
     id: "florencia",
@@ -52,9 +49,6 @@ export const CITIES: Record<City["id"], City> = {
     code: "FLR",
     lat: 43.77,
     lng: 11.26,
-    dateLabel: "12–15 dic",
-    nights: 3,
-    ambient: "/audio/firenze-ambient.mp3",
   },
   viena: {
     id: "viena",
@@ -63,9 +57,6 @@ export const CITIES: Record<City["id"], City> = {
     code: "VIE",
     lat: 48.21,
     lng: 16.37,
-    dateLabel: "15–19 dic",
-    nights: 4,
-    ambient: "/audio/wien-ambient.mp3",
   },
 };
 
@@ -74,10 +65,10 @@ export interface Leg {
   to: City["id"];
   mode: "flight" | "train";
   routeLabel: string;
-  dateLabel: string;
+  dateLabel?: string;
 }
 
-export const LEGS: Leg[] = [
+export const LEGS: readonly [Leg, Leg, Leg, Leg] = [
   {
     from: "austin",
     to: "roma",
@@ -90,14 +81,12 @@ export const LEGS: Leg[] = [
     to: "florencia",
     mode: "train",
     routeLabel: "Roma → Firenze",
-    dateLabel: "12 dic 2026",
   },
   {
     from: "florencia",
     to: "viena",
     mode: "flight",
     routeLabel: "FLR → VIE",
-    dateLabel: "15 dic 2026",
   },
   {
     from: "viena",

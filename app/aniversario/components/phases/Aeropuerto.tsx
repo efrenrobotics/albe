@@ -1,288 +1,105 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import PhaseShell from "../PhaseShell";
-import { HOOK_LINE, LEGS, TRIP } from "../../data/trip";
+import { CITIES, HOOK_LINE, LEGS, TRIP } from "../../data/trip";
+import type { AniversarioAudio } from "../../lib/audio";
+import styles from "../../journey.module.css";
 
-interface Props {
-  onContinue: () => void;
-}
+const DESTINATION = CITIES.roma.name.toLocaleUpperCase("es").split("");
+const LYRIC = `«${HOOK_LINE}»`;
 
-const DEST_LETTERS = "ROMA".split("");
-
-function FlapBoard({ ready }: { ready: boolean }) {
-  const [letters, setLetters] = useState(["?", "?", "?", "?"]);
-
-  useEffect(() => {
-    if (!ready) return;
-    const timers: number[] = [];
-    DEST_LETTERS.forEach((ch, i) => {
-      // Scramble briefly then land
-      let tick = 0;
-      const scramble = window.setInterval(() => {
-        tick++;
-        setLetters((prev) => {
-          const next = [...prev];
-          next[i] =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[
-              Math.floor(Math.random() * 26)
-            ];
-          return next;
-        });
-        if (tick > 8 + i * 3) {
-          clearInterval(scramble);
-          setLetters((prev) => {
-            const next = [...prev];
-            next[i] = ch;
-            return next;
-          });
-        }
-      }, 70);
-      timers.push(scramble);
-    });
-    return () => timers.forEach(clearInterval);
-  }, [ready]);
-
-  return (
-    <div
-      className="flex gap-1.5 justify-center my-3"
-      aria-label={`Destino: ${letters.join("")}`}
-    >
-      {letters.map((ch, i) => (
-        <motion.span
-          key={i}
-          className="w-10 h-12 sm:w-12 sm:h-14 flex items-center justify-center font-mono text-2xl sm:text-3xl font-bold bg-warm-black text-soft-gold rounded border border-soft-gold/40"
-          initial={{ rotateX: -90 }}
-          animate={{ rotateX: 0 }}
-          transition={{ delay: 0.8 + i * 0.15, duration: 0.35 }}
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {ch}
-        </motion.span>
-      ))}
-    </div>
-  );
-}
-
-function TypeLine({
-  text,
-  delayMs,
-  onDone,
-  className,
-}: {
-  text: string;
-  delayMs: number;
-  onDone?: () => void;
-  className?: string;
-}) {
-  const [shown, setShown] = useState("");
-  useEffect(() => {
-    let i = 0;
-    let interval: number | undefined;
-    const start = window.setTimeout(() => {
-      interval = window.setInterval(() => {
-        i++;
-        setShown(text.slice(0, i));
-        if (i >= text.length) {
-          clearInterval(interval);
-          onDone?.();
-        }
-      }, 42);
-    }, delayMs);
-    return () => {
-      clearTimeout(start);
-      if (interval) clearInterval(interval);
-    };
-  }, [text, delayMs, onDone]);
-
-  return (
-    <p className={className}>
-      {shown}
-      {shown.length < text.length && (
-        <span className="animate-pulse opacity-60">|</span>
-      )}
-    </p>
-  );
-}
-
-export default function Aeropuerto({ onContinue }: Props) {
-  const [assembled, setAssembled] = useState(0);
-  const [ready, setReady] = useState(false);
-  const [secondLine, setSecondLine] = useState(false);
+export default function Aeropuerto({ audio, onContinue }: { audio: AniversarioAudio; onContinue: () => void }) {
+  const [flaps, setFlaps] = useState(0);
+  const [typed, setTyped] = useState(0);
   const [canAdvance, setCanAdvance] = useState(false);
-  const leg = LEGS[0];
+  const reduced = useReducedMotion();
+  const complete = typed === LYRIC.length;
+  const departure = LEGS[0];
 
   useEffect(() => {
-    const timers = [1, 2, 3, 4].map((n, i) =>
-      window.setTimeout(() => setAssembled(n), 400 + i * 450),
+    const timers = DESTINATION.map((_, index) =>
+      window.setTimeout(() => {
+        setFlaps(index + 1);
+        if (!reduced || index === 0) audio.play("flap");
+      }, reduced ? 350 : 1500 + index * 210),
     );
-    const flap = window.setTimeout(() => setReady(true), 2200);
+    let interval: number | undefined;
+    const timer = window.setTimeout(() => {
+      if (reduced) {
+        setTyped(LYRIC.length);
+        return;
+      }
+      let index = 0;
+      interval = window.setInterval(() => {
+        index++;
+        setTyped(index);
+        if (index >= LYRIC.length) clearInterval(interval);
+      }, 36);
+    }, reduced ? 600 : 2400);
     return () => {
       timers.forEach(clearTimeout);
-      clearTimeout(flap);
+      clearTimeout(timer);
+      clearInterval(interval);
     };
-  }, []);
+  }, [audio, reduced]);
 
-  const onHookDone = useCallback(() => {
-    setSecondLine(true);
-    window.setTimeout(() => setCanAdvance(true), 1800);
-  }, []);
-
-  const scratchRef = useRef<HTMLCanvasElement>(null);
-  const scratching = useRef(false);
-
-  // Optional scratch overlay on flap destination area (extra delight)
   useEffect(() => {
-    const canvas = scratchRef.current;
-    if (!canvas || !ready) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.fillStyle = "#3a2a18";
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = "rgba(212,175,55,0.35)";
-    ctx.font = "12px monospace";
-    ctx.textAlign = "center";
-    ctx.fillText("arrastra para revelar", w / 2, h / 2);
-  }, [ready]);
-
-  const scratch = (x: number, y: number) => {
-    const canvas = scratchRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x - rect.left, y - rect.top, 18, 0, Math.PI * 2);
-    ctx.fill();
-  };
+    if (!complete) return;
+    const timer = window.setTimeout(() => setCanAdvance(true), 800);
+    return () => clearTimeout(timer);
+  }, [complete]);
 
   return (
-    <PhaseShell
-      onAdvance={onContinue}
-      canAdvance={canAdvance}
-      hint="Toca para despegar"
-      background="linear-gradient(180deg, #1A0A10 0%, #2A1510 50%, #1A0A10 100%)"
-    >
-      <div className="w-full max-w-md px-5 relative z-10" data-no-advance>
-        <motion.div
-          className="glass-card rounded-2xl p-5 sm:p-6 shadow-2xl"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="flex justify-between items-start mb-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: assembled >= 1 ? 1 : 0 }}
-            >
-              <p className="text-[10px] uppercase tracking-[0.25em] text-soft-gold/70 font-mono">
-                Pase de abordar
-              </p>
-              <p className="font-serif text-lg text-white/90 mt-1">
-                Aniversario · {TRIP.year}
-              </p>
-            </motion.div>
-            <motion.div
-              className="text-right"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: assembled >= 1 ? 1 : 0 }}
-            >
-              <p className="font-mono text-xs text-white/50">Ruta</p>
-              <p className="font-mono text-soft-gold font-bold">
-                {leg.routeLabel}
-              </p>
-            </motion.div>
+    <PhaseShell onAdvance={onContinue} canAdvance={canAdvance} hint="Despegar">
+      <div className="w-full max-w-[31rem]">
+        <motion.div className={styles.ticket} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <div className={styles.ticketHead}>
+            <span>Pase de abordar</span><span aria-hidden>✦</span>
           </div>
-
-          <motion.div
-            className="border-t border-dashed border-soft-gold/25 pt-4 mb-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: assembled >= 2 ? 1 : 0 }}
-          >
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-mono">
-              Pasajera
-            </p>
-            <p className="font-serif text-2xl text-white">{TRIP.passenger}</p>
+          <motion.div className={styles.ticketRoute}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+            <span>{CITIES.austin.code}</span>
+            <svg viewBox="0 0 44 20" width="44" aria-hidden fill="none" stroke="currentColor">
+              <path d="M1 10h39m-7-6 7 6-7 6" />
+            </svg>
+            <span>{flaps === DESTINATION.length ? CITIES.roma.code : "···"}</span>
           </motion.div>
-
-          <motion.div
-            className="grid grid-cols-2 gap-3 mb-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: assembled >= 3 ? 1 : 0 }}
-          >
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-mono">
-                Fecha
-              </p>
-              <p className="font-mono text-sm text-soft-gold">{leg.dateLabel}</p>
+          <motion.dl className={styles.ticketDetails}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+            <div><dt>Pasajera</dt><dd>{TRIP.passenger}</dd></div>
+            <div><dt>Salida</dt><dd>{departure.dateLabel}</dd></div>
+            <div><dt>Clase</dt><dd>Primera (en mi corazón)</dd></div>
+          </motion.dl>
+          <div className={styles.ticketStub}>
+            <p className="mb-2 text-[.66rem] uppercase tracking-[.22em]">Destino</p>
+            <div className="flex justify-center gap-2" aria-hidden>
+              {DESTINATION.map((letter, index) => (
+                <div key={index} className={styles.tile}>
+                  <motion.span
+                    key={index < flaps ? letter : "—"}
+                    initial={{ rotateX: reduced ? 0 : -78, opacity: 0 }}
+                    animate={{ rotateX: 0, opacity: 1 }}
+                    transition={{ duration: 0.26, ease: "easeOut" }}
+                  >
+                    {index < flaps ? letter : "—"}
+                  </motion.span>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-mono">
-                Clase
-              </p>
-              <p className="font-mono text-sm text-soft-gold">
-                Primera (en mi corazón)
-              </p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="relative mt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: assembled >= 4 ? 1 : 0 }}
-          >
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-mono text-center">
-              Destino
-            </p>
-            <div className="relative">
-              <FlapBoard ready={ready} />
-              {ready && (
-                <canvas
-                  ref={scratchRef}
-                  className="absolute inset-0 w-full h-full rounded cursor-crosshair touch-none"
-                  style={{ touchAction: "none" }}
-                  onPointerDown={(e) => {
-                    scratching.current = true;
-                    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-                    scratch(e.clientX, e.clientY);
-                  }}
-                  onPointerMove={(e) => {
-                    if (!scratching.current) return;
-                    scratch(e.clientX, e.clientY);
-                  }}
-                  onPointerUp={() => {
-                    scratching.current = false;
-                  }}
-                  aria-label="Rasca para revelar el destino"
-                  data-no-advance
-                />
-              )}
-            </div>
-          </motion.div>
+            <span className="sr-only" role="status">{flaps === DESTINATION.length && CITIES.roma.name}</span>
+          </div>
         </motion.div>
-
-        <div className="mt-8 text-center space-y-3 px-2">
-          <TypeLine
-            text={`"${HOOK_LINE}"`}
-            delayMs={2800}
-            onDone={onHookDone}
-            className="font-serif italic text-base sm:text-lg text-soft-gold/90"
-          />
-          {secondLine && (
-            <TypeLine
-              text="...y esta vez nos vamos a Europa."
-              delayMs={200}
-              className="font-serif text-sm sm:text-base text-white/70"
-            />
-          )}
+        <div className="mt-6 min-h-[6.2rem] text-center">
+          <p className="font-serif italic text-lg leading-snug sm:text-xl">
+            <span aria-hidden>{LYRIC.slice(0, typed)}</span>
+            {complete && <span className="sr-only">{LYRIC}</span>}
+          </p>
+          {complete && <motion.p className="mt-3 text-sm text-firenze-cream"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            ...y esta vez nos vamos a Europa.
+          </motion.p>}
         </div>
       </div>
     </PhaseShell>
