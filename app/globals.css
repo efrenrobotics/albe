@@ -27,6 +27,24 @@
   --soft-gold: #D4AF37;
   --orchid-purple: #B55FBA;
   --orchid-pink: #DA70D6;
+
+  /* Aniversario — Roma */
+  --roma-terracotta: #C45C26;
+  --roma-ochre: #C4A35A;
+  --roma-gold: #E8B84A;
+  --roma-night: #2A1510;
+
+  /* Aniversario — Firenze */
+  --firenze-rose: #E8A0A0;
+  --firenze-cream: #F5E6D3;
+  --firenze-terracotta: #B85C38;
+  --firenze-dusk: #3D1F2E;
+
+  /* Aniversario — Wien */
+  --wien-midnight: #0B1A2E;
+  --wien-snow: #F0F4F8;
+  --wien-gold: #D4AF37;
+  --wien-light: #FFE6A0;
 }
 
 @theme inline {
@@ -52,6 +70,21 @@
   --color-soft-gold: var(--soft-gold);
   --color-orchid-purple: var(--orchid-purple);
   --color-orchid-pink: var(--orchid-pink);
+
+  --color-roma-terracotta: var(--roma-terracotta);
+  --color-roma-ochre: var(--roma-ochre);
+  --color-roma-gold: var(--roma-gold);
+  --color-roma-night: var(--roma-night);
+
+  --color-firenze-rose: var(--firenze-rose);
+  --color-firenze-cream: var(--firenze-cream);
+  --color-firenze-terracotta: var(--firenze-terracotta);
+  --color-firenze-dusk: var(--firenze-dusk);
+
+  --color-wien-midnight: var(--wien-midnight);
+  --color-wien-snow: var(--wien-snow);
+  --color-wien-gold: var(--wien-gold);
+  --color-wien-light: var(--wien-light);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
